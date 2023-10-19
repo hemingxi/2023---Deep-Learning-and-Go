@@ -1,4 +1,7 @@
+# [?] not sure what these tags do
+# tag::enumimport[] 
 import enum
+# end::enumimport[]
 
 class Player(enum.Enum):
     black = 1

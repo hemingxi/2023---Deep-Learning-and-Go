@@ -1,5 +1,6 @@
 import copy
 from dlgo.gotypes import Player
+from typing import Union, Tuple
 
 class Move():
     def __init__(self, point = None, is_pass = False, is_resign = False):
@@ -11,7 +12,7 @@ class Move():
         self.is_pass = is_pass
         self.is_resign = is_resign
 
-    @classmethod
+    @classmethod # these do not operate on the instance, but rather the class method directly
     def play(cls, point):
         # first input of class method is cls to differentiate them from instance methods
         return Move(point = point)
@@ -24,6 +25,7 @@ class Move():
     def resign(cls):
         return(Move(is_resign = True))
     
+
 class GoString():
     def __init__(self, color, stones, liberties):
         self.color = color
@@ -54,7 +56,8 @@ class GoString():
         self.color ==other.color and \
         self.stones == other.stones and \
         self.liberties == other.liberties
-    
+
+
 class Board():
     def __init__(self, num_rows, num_cols):
         self.num_rows = num_rows
@@ -127,7 +130,7 @@ class Board():
             return None
         return string.color
     
-    def get_go_string(self, point): # [?] this funciton isn't used yet
+    def get_go_string(self, point) -> GoString: # [?] this funciton isn't used yet
         """
         If a stone's been placed on that point, gets you string that stone is attached to
 
@@ -154,9 +157,99 @@ class Board():
 
             self._grid[point] = None # pop this at the end is the correct order
         
+
 class GameState():
-    # this knows about:
-    #   the board position, 
-    #   the next player, 
-    #   the previous game state, 
-    #   and the last move
+    """
+    This knows about:
+       the board position, 
+       the next player, 
+       the previous game state, 
+       and the last move
+
+    Args:
+        board: the current board state
+        next_player: 
+        previous_state:
+        last_move:
+    """
+    def __init__(self, board: Board, next_player: Player, previous: Board, move: Move):
+        self.board = board # class Board
+        self.next_player = next_player # enum Player
+        self.previous_state = previous # class GameState, this points to the previous board
+        self.last__move = move # class Move (play, pass, or resign)
+
+    def apply_move(self, move: Move) -> 'GameState': # move is from the Move class, and could be play, pass or resign
+        """
+        Args:
+            move: Type Move (play, pass, or resign) to be applied
+        Returns:
+            Returns new game state after applying move
+        """
+        if move.is_play:
+            next_board = copy.deepcopy(self.board)
+            next_board.place_stone(self.next_player, move.point) # self.next_player.other gives you the current player
+        else:
+            next_board = self.board
+        return GameState(
+            next_board, 
+            self.next_player.other, 
+            self.board,
+            move
+        )
+
+    @classmethod
+    def new_game(cls, board_size: Union[int, tuple]) -> 'GameState': # this is a forward reference string, otherwise the linter says type not defined
+        """
+        Args:
+            board_size: could be int or tuple
+        Returns:
+            Returns new game state with no stones placed
+        """
+        if isinstance(board_size, int):
+            # this gives flexibility to define board size as either 19, or (19,19)
+            board_size = (board_size, board_size) # create a tuple
+        board = Board(*board_size)
+        return GameState(
+            board,
+            Player.black, # black goes first
+            None,
+            None
+        )
+    
+    def is_over(self) -> bool:
+        if self.last_move is None: # check for edge case of being a new game
+            return False
+        if self.last_move.is_resign:
+            return True
+        
+        second_last_move = self.previous_state.last_move
+        if second_last_move is None: # check for edge case of first move in a new game
+            return False
+        return self.last_move.is_pass and second_last_move.ispass
+    
+    # check 3 rules:
+    # point you want to play is empty
+    # check move is not self_capture
+    # check that move does not violate ko - returns to previous board state
+
+    def is_move_self_capture(self, player: Player, move: Move) -> bool:
+        if not move.isplay: # if they pass or resign, it is not a self capture
+            False
+        # does my attempt work? no, because the apply_move calls play_stone which does not check for self capture
+        # so the stones will still be on there
+        # new_state = self.apply_move(Move)
+        # return new_state.board.get_go_string(move.point) is None
+        next_board = copy.deepcopy(self.board)
+        next_board.place_stone(move.point)
+        return next_board.get_go_string(move.point).num_liberties == 0
+    
+    @property
+    def situation(self) -> Tuple[Player, Board]:
+        return(self.next_player, self.board)
+
+    def does_move_violate_ko(self, player: Player, move: Move) -> bool: #[?] fill this out
+        return False
+    
+    def is_valid_move(self, move: Move) -> bool:
+        return False
+    
