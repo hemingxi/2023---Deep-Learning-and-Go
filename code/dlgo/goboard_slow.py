@@ -27,7 +27,7 @@ class Move():
 class GoString():
     def __init__(self, color, stones, liberties):
         self.color = color
-        self.stones = set(stones) # this uses the data type and removes duplicates
+        self.stones = set(stones) # this uses the set data type and removes duplicates. Each stone is a Point
         self.liberties = set(liberties)
 
     def remove_liberty(self, point):
@@ -40,9 +40,9 @@ class GoString():
         assert go_string.color == self.color
         combined_stones = self.stones | go_string.stones # union the two sets
         return GoString(
-            self.color,
-            combined_stones,
-            (self.liberties | go_string.liberties) - combined_stones
+            self.color, # color
+            combined_stones, # stones
+            (self.liberties | go_string.liberties) - combined_stones # liberties
         )
     
     @property
@@ -64,14 +64,14 @@ class Board():
 
     def place_stone(self, player, point):
         """
-        This is a docstring for my_method.
+        This method places a stone down
 
         Args:
-            param1: Description of the first parameter.
-            param2: Description of the second parameter.
+            player: Type Player (black or white) that is placing the stone
+            point: where on the grid the player is placing the stone
 
         Returns:
-            Description of the return value (if any).
+            Doesn't return anything, modifies _grid directly
         """
         assert self.is_on_grid(point) # point exists on grid
         assert self._grid.get(point) is None # check that there's not already a stone there. _grid.get() returns the string of the stone that's there, or None if it's empty
@@ -84,6 +84,7 @@ class Board():
             if not self.is_on_grid(neighbor):
                 continue # if the neighboring point you are checking is off the grid, then continue the loop no need to do anything else
             
+            # get the liberties and neighboring strings of this point
             neighbor_string = self._grid.get(neighbor) # grid is a dict mapping points to their GoStrings, neighbor is Point type
             if neighbor_string is None: # this is the GoString type we defined earlier
                 # if neighbor_string is None, that means it's not already part of a GoString, meaning it is empty
@@ -95,16 +96,16 @@ class Board():
                 if neighbor_string not in adjacent_opposite_color:
                     adjacent_opposite_color.append(neighbor_string)
 
-            new_string = GoString(player, [point], liberties)
-            for same_color_string in adjacent_same_color: # [?] finish this part of the code given what you know
-                # merge the strings 
-            for new_string_point in new_string.stones:
-                # merge the strings
-            for other_color_string in adjacent_opposite_color:
-                # reduce liberties
-            for other_color_string in adjacent_opposite_color:
-                # capture if their liberties are now at 0
-
+            new_string = GoString(player, [point], liberties) # make a new GoString with only the one point
+            for same_color_string in adjacent_same_color: # add it to all existing strings that it's next to
+                new_string = new_string.merged_with(same_color_string)
+            for new_string_point in new_string.stones: # update all the points in this combined string 
+                self._grid[new_string_point] = new_string 
+            for other_color_string in adjacent_opposite_color: # remove liberties from opposing strings
+                other_color_string.remove_liberty(point)
+            for other_color_string in adjacent_opposite_color: # capture any strings with no liberties left
+                if other_color_string.num_liberties == 0:
+                    self._remove_string(other_color_string)
 
     def is_on_grid(self, point):
         # the grid will go from 1 to num_rows (not 0 delimited)
@@ -141,3 +142,21 @@ class Board():
             return None
         return string
     
+    def _remove_string(self, string): # underscore indicates private function not to be used outside of this class
+        for point in string.stones:
+            # stones might gain liberties after capture
+            for neighbor in point.neighbors():
+                neighbor_string = self._grid.get(neighbor)
+                if neighbor_string is None:
+                    continue
+                if neighbor_string is not string: # don't want to add liberties to itself that string is getting deleted 
+                    neighbor_string.add_liberty(point)
+
+            self._grid[point] = None # pop this at the end is the correct order
+        
+class GameState():
+    # this knows about:
+    #   the board position, 
+    #   the next player, 
+    #   the previous game state, 
+    #   and the last move
