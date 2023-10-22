@@ -63,7 +63,8 @@ class Board():
         self.num_rows = num_rows
         self.num_cols = num_cols
         self._grid = {} # underscore is convention that this variable is protected and should not be accessed/modified outside the class
-        # I'm assuming grid is a dictionary mapping points to their GoStrings. When you call _grid.get(point) you get the string-of-stones that that point is attached to
+        # I'm assuming grid is a dictionary mapping points to their GoStrings. 
+        # When you call _grid.get(point) you get the string-of-stones that that point is attached to
 
     def place_stone(self, player, point):
         """
@@ -77,7 +78,8 @@ class Board():
             Doesn't return anything, modifies _grid directly
         """
         assert self.is_on_grid(point) # point exists on grid
-        assert self._grid.get(point) is None # check that there's not already a stone there. _grid.get() returns the string of the stone that's there, or None if it's empty
+        assert self._grid.get(point) is None # check that there's not already a stone there. 
+        # _grid.get() returns the string of the stone that's there, or None if it's empty
         
         adjacent_same_color = []
         adjacent_opposite_color = []
@@ -235,7 +237,8 @@ class GameState():
     def is_move_self_capture(self, player: Player, move: Move) -> bool:
         if not move.isplay: # if they pass or resign, it is not a self capture
             False
-        # does my attempt work? no, because the apply_move calls play_stone which does not check for self capture
+        # my attempt:
+        # does it work? no, because the apply_move calls play_stone which does not check for self capture
         # so the stones will still be on there
         # new_state = self.apply_move(Move)
         # return new_state.board.get_go_string(move.point) is None
@@ -247,9 +250,44 @@ class GameState():
     def situation(self) -> Tuple[Player, Board]:
         return(self.next_player, self.board)
 
-    def does_move_violate_ko(self, player: Player, move: Move) -> bool: #[?] fill this out
+    def does_move_violate_ko(self, player: Player, move: Move) -> bool: 
+        # my attempt 1:
+        # it does not work because you need to check the situation (player and board)
+        # next_game_state = copy.deepcopy(self)
+        # next_game_state.apply_move(move)
+        # game_state_iterate = next_game_state.previous_state
+        # while game_state_iterate is not None:
+        #     if next_game_state.board == game_state_iterate.board:
+        #         return True
+        #     game_state_iterate = game_state_iterate.previous_state
+        if not move.isPlay:
+            return False # skip all the checks if they pass or resign
+        # my attempt 2:
+        # might not be good to deepcopy the GameState object, because it points to other objects. It's too much overhead
+        # next_game_state = copy.deepcopy(self)
+        # next_game_state.apply_move(move)
+        # past_state = next_game_state.previous_state
+        # while past_state is not None:
+        #     if next_game_state.situation == past_state.situation:
+        #         return True
+        #     past_state = past_state.previous_state
+        next_board = copy.deepcopy(self.board)
+        next_board.place_stone(player, move.point)
+        past_state = self.previous_state  # can start with self.previous because after you place the stone it can't possibly be equal the current state
+        while past_state is not None:
+            if past_state.situation == (player.other, next_board):  # you can define next_situation = (player.other, next_board) for readbility
+                return True
+            past_state = past_state.previous_state
         return False
-    
+        
     def is_valid_move(self, move: Move) -> bool:
-        return False
+        if self.is_over():
+            return False
+        if move.is_pass or move.is_resign:
+            return True
+        is_point_empty = self.board.get(move.point) is None
+        return (
+            is_point_empty and
+            not self.is_move_self_capture(self.next_player, move) and
+            not self.does_move_violate_ko(self.next_player, move))
     
