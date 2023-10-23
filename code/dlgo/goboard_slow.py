@@ -1,5 +1,5 @@
 import copy
-from dlgo.gotypes import Player
+from dlgo.gotypes import Player, Point
 from typing import Union, Tuple
 
 class Move():
@@ -13,7 +13,7 @@ class Move():
         self.is_resign = is_resign
 
     @classmethod # these do not operate on the instance, but rather the class method directly
-    def play(cls, point):
+    def play(cls, point: Point) -> Point:
         # first input of class method is cls to differentiate them from instance methods
         return Move(point = point)
     
@@ -97,27 +97,29 @@ class Board():
             elif neighbor_string.color == player:
                 if neighbor_string not in adjacent_same_color:
                     adjacent_same_color.append(neighbor_string)
-            else:
+            elif neighbor_string.color == player.other: # you ahvet to add this condition otherwise you'll try to remove liberties of an empty board
                 if neighbor_string not in adjacent_opposite_color:
                     adjacent_opposite_color.append(neighbor_string)
 
-            new_string = GoString(player, [point], liberties) # make a new GoString with only the one point
-            for same_color_string in adjacent_same_color: # add it to all existing strings that it's next to
-                new_string = new_string.merged_with(same_color_string)
-            for new_string_point in new_string.stones: # update all the points in this combined string 
-                self._grid[new_string_point] = new_string 
-            for other_color_string in adjacent_opposite_color: # remove liberties from opposing strings
-                other_color_string.remove_liberty(point)
-            for other_color_string in adjacent_opposite_color: # capture any strings with no liberties left
-                if other_color_string.num_liberties == 0:
-                    self._remove_string(other_color_string)
+        # this block needs to be outside the loop, 
+        # because only after looping through all the neighbors do you have a proper list of liberties
+        new_string = GoString(player, [point], liberties) # make a new GoString with only the one point
+        for same_color_string in adjacent_same_color: # add it to all existing strings that it's next to
+            new_string = new_string.merged_with(same_color_string)
+        for new_string_point in new_string.stones: # update all the points in this combined string 
+            self._grid[new_string_point] = new_string 
+        for other_color_string in adjacent_opposite_color: # remove liberties from opposing strings
+            other_color_string.remove_liberty(point)
+        for other_color_string in adjacent_opposite_color: # capture any strings with no liberties left
+            if other_color_string.num_liberties == 0:
+                self._remove_string(other_color_string)
 
     def is_on_grid(self, point):
         # the grid will go from 1 to num_rows (not 0 delimited)
         return 1 <= point.row <= self.num_rows and \
         1 <= point.col <= self.num_cols
     
-    def get(self, point): # [?] I don't think this function is used above? it's using the dictionary get method
+    def get(self, point: Point) -> Player: # [?] I don't think this function is used above? it's using the dictionary get method
         """
         If a stone's been placed on that point, gets you the color of that stone
 
@@ -154,7 +156,8 @@ class Board():
                 neighbor_string = self._grid.get(neighbor)
                 if neighbor_string is None:
                     continue
-                if neighbor_string is not string: # don't want to add liberties to itself that string is getting deleted 
+                if neighbor_string is not string:  # don't want to add liberties to itself that string is getting deleted, 
+                # because it no longer exists
                     neighbor_string.add_liberty(point)
 
             self._grid[point] = None # pop this at the end is the correct order
@@ -174,11 +177,11 @@ class GameState():
         previous_state:
         last_move:
     """
-    def __init__(self, board: Board, next_player: Player, previous: Board, move: Move):
+    def __init__(self, board: Board, next_player: Player, previous: 'GameState', move: Move):
         self.board = board # class Board
         self.next_player = next_player # enum Player
-        self.previous_state = previous # class GameState, this points to the previous board
-        self.last__move = move # class Move (play, pass, or resign)
+        self.previous_state = previous # class GameState, this points to the previous GameState
+        self.last_move = move # class Move (play, pass, or resign)
 
     def apply_move(self, move: Move) -> 'GameState': # move is from the Move class, and could be play, pass or resign
         """
@@ -195,7 +198,7 @@ class GameState():
         return GameState(
             next_board, 
             self.next_player.other, 
-            self.board,
+            self,
             move
         )
 
@@ -227,7 +230,7 @@ class GameState():
         second_last_move = self.previous_state.last_move
         if second_last_move is None: # check for edge case of first move in a new game
             return False
-        return self.last_move.is_pass and second_last_move.ispass
+        return self.last_move.is_pass and second_last_move.is_pass
     
     # check 3 rules:
     # point you want to play is empty
@@ -235,15 +238,15 @@ class GameState():
     # check that move does not violate ko - returns to previous board state
 
     def is_move_self_capture(self, player: Player, move: Move) -> bool:
-        if not move.isplay: # if they pass or resign, it is not a self capture
-            False
+        if not move.is_play: # if they pass or resign, it is not a self capture
+            return False
         # my attempt:
         # does it work? no, because the apply_move calls play_stone which does not check for self capture
         # so the stones will still be on there
         # new_state = self.apply_move(Move)
         # return new_state.board.get_go_string(move.point) is None
         next_board = copy.deepcopy(self.board)
-        next_board.place_stone(move.point)
+        next_board.place_stone(player, move.point)
         return next_board.get_go_string(move.point).num_liberties == 0
     
     @property
@@ -260,7 +263,7 @@ class GameState():
         #     if next_game_state.board == game_state_iterate.board:
         #         return True
         #     game_state_iterate = game_state_iterate.previous_state
-        if not move.isPlay:
+        if not move.is_play:
             return False # skip all the checks if they pass or resign
         # my attempt 2:
         # might not be good to deepcopy the GameState object, because it points to other objects. It's too much overhead
