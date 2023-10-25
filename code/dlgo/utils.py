@@ -1,7 +1,7 @@
 from dlgo import gotypes
 from dlgo.goboard_slow import Move, Board
 
-COLS = 'ABCDEFGJKLMNOPQRST'
+COLS = 'ABCDEFGHJKLMNOPQRST'
 STONE_TO_CHAR = {
     None: '.',
     gotypes.Player.black: 'x',
