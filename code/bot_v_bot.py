@@ -24,7 +24,7 @@ def main():
         game = game.apply_move(bot_move)
 
         end_time = time.time()
-        print(f"Move: {n} Elapsted time {end_time - start_time}s")
+        print(f"Move: {n} Elapsted time {end_time - start_time}s")  # takes 1.6s per turn by around turn 70
         n += 1
 
 
