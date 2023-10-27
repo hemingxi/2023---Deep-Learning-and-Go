@@ -2,6 +2,18 @@ import copy
 from dlgo.gotypes import Player, Point
 from typing import Union, Tuple
 from dlgo import zobrist
+import time
+
+def timing_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"{func.__name__} took {execution_time} seconds to run")
+        return result
+    return wrapper
+
 
 class Move():
     def __init__(self, point = None, is_pass = False, is_resign = False):
@@ -284,7 +296,8 @@ class GameState():
         next_board.place_stone(player, move.point)
         next_situation = (player.other, next_board.zobrist_hash())
         return next_situation in self.previous_states
-        
+    
+    # @timing_decorator
     def is_valid_move(self, move: Move) -> bool:
         if self.is_over():
             return False

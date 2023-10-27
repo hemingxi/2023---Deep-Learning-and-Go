@@ -1,5 +1,5 @@
 from dlgo.gotypes import Point, Player
-from dlgo.goboard_slow import Board
+from dlgo.goboard import Board
 
 def is_point_an_eye(board: Board, point: Point, color: Player) -> bool:
     # eye has to be empty point:

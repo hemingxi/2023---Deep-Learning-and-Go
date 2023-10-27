@@ -1,6 +1,18 @@
 import copy
 from dlgo.gotypes import Player, Point
 from typing import Union, Tuple
+import time
+
+def timing_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"{func.__name__} took {execution_time} seconds to run")
+        return result
+    return wrapper
+
 
 class Move():
     def __init__(self, point = None, is_pass = False, is_resign = False):
@@ -282,7 +294,8 @@ class GameState():
                 return True
             past_state = past_state.previous_state
         return False
-        
+    
+    # @timing_decorator
     def is_valid_move(self, move: Move) -> bool:
         if self.is_over():
             return False

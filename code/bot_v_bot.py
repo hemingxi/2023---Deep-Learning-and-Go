@@ -3,6 +3,7 @@ from dlgo import goboard_slow  # change this to goboard once you implement hashi
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
 import time
+import cProfile
 
 def main():
     board_size = 19
@@ -13,7 +14,7 @@ def main():
     }
 
     n=0
-    while not game.is_over():
+    while not game.is_over() and n <= 20:
         start_time = time.time()
         time.sleep(0)
 
@@ -29,4 +30,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    cProfile.run("main()")
