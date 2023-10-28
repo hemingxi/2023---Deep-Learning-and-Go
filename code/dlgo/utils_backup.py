@@ -32,3 +32,9 @@ def print_board(board: Board) -> None:
     
     print(f"    {''.join(COLS[:board.num_cols])}")
  
+def point_from_coords(coords):
+    # Both index and find will work here. 
+    # You need to add 1 because of python's 0 indexing and convering it back to 1 based indexing that we use in the Board class
+    col = COLS.index(coords[0]) + 1 
+    row = int(coords[1:])  # it could be something like A17, so you need to take the 1th position to the end
+    return gotypes.Point(row=row, col=col)
