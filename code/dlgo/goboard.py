@@ -15,30 +15,6 @@ def timing_decorator(func):
     return wrapper
 
 
-class Move():
-    def __init__(self, point = None, is_pass = False, is_resign = False):
-        #typically you would not create a Move directly,
-        # but rather construct an instance by calling the 3 class methods: play, pass_turn, or resign
-        assert (point is not None) ^ is_pass ^ is_resign # this is asserting that only 1 or all 3 has to be true
-        self.point = point
-        self.is_play = (self.point is not None)
-        self.is_pass = is_pass
-        self.is_resign = is_resign
-
-    @classmethod # these do not operate on the instance, but rather the class method directly
-    def play(cls, point: Point) -> Point:
-        # first input of class method is cls to differentiate them from instance methods
-        return Move(point = point)
-    
-    @classmethod 
-    def pass_turn(cls):
-        return Move(is_pass = True)
-    
-    @classmethod
-    def resign(cls):
-        return(Move(is_resign = True))
-    
-
 class GoString():
     def __init__(self, color: Player, stones: frozenset, liberties: frozenset):
         self.color = color
@@ -133,7 +109,25 @@ class Board():
                 self._remove_string(other_color_string)
             else:
                 self._replace_string(replacement)
+    
+    def _replace_string(self, new_string: GoString):
+        for point in new_string.stones:  # update all the points in this combined string 
+            self._grid[point] = new_string 
 
+    def _remove_string(self, string: GoString):  # underscore indicates private function not to be used outside of this class
+        for point in string.stones:
+            # stones might gain liberties after capture
+            for neighbor in point.neighbors():
+                neighbor_string = self._grid.get(neighbor)
+                if neighbor_string is None:
+                    continue
+                if neighbor_string is not string:  # don't want to add liberties to itself that string is getting deleted, 
+                # because it no longer exists
+                    self._replace_string(neighbor_string.with_liberty(point))
+            self._grid[point] = None 
+
+            self._hash ^= zobrist.HASH_CODE[point, string.color]
+    
     def is_on_grid(self, point):
         # the grid will go from 1 to num_rows (not 0 delimited)
         return 1 <= point.row <= self.num_rows and \
@@ -171,25 +165,31 @@ class Board():
     
     def zobrist_hash(self):
         return self._hash
+
+
+class Move():
+    def __init__(self, point = None, is_pass = False, is_resign = False):
+        #typically you would not create a Move directly,
+        # but rather construct an instance by calling the 3 class methods: play, pass_turn, or resign
+        assert (point is not None) ^ is_pass ^ is_resign # this is asserting that only 1 or all 3 has to be true
+        self.point = point
+        self.is_play = (self.point is not None)
+        self.is_pass = is_pass
+        self.is_resign = is_resign
+
+    @classmethod # these do not operate on the instance, but rather the class method directly
+    def play(cls, point: Point) -> Point:
+        # first input of class method is cls to differentiate them from instance methods
+        return Move(point = point)
     
-    def _replace_string(self, new_string: GoString):
-        for point in new_string.stones:  # update all the points in this combined string 
-            self._grid[point] = new_string 
-
-    def _remove_string(self, string: GoString):  # underscore indicates private function not to be used outside of this class
-        for point in string.stones:
-            # stones might gain liberties after capture
-            for neighbor in point.neighbors():
-                neighbor_string = self._grid.get(neighbor)
-                if neighbor_string is None:
-                    continue
-                if neighbor_string is not string:  # don't want to add liberties to itself that string is getting deleted, 
-                # because it no longer exists
-                    self._replace_string(neighbor_string.with_liberty(point))
-            self._grid[point] = None 
-
-            self._hash ^= zobrist.HASH_CODE[point, string.color]
-
+    @classmethod 
+    def pass_turn(cls):
+        return Move(is_pass = True)
+    
+    @classmethod
+    def resign(cls):
+        return(Move(is_resign = True))
+    
 
 class GameState():
     """

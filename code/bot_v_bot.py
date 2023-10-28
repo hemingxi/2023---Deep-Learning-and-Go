@@ -1,5 +1,5 @@
 from dlgo.agent import naive, base, helpers
-from dlgo import goboard_slow  # change this to goboard once you implement hashing -> doesn't seem like it's much faster??
+from dlgo import goboard_fast  # change this to goboard once you implement hashing -> doesn't seem like it's much faster??
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
 import time
@@ -7,7 +7,7 @@ import cProfile
 
 def main():
     board_size = 19
-    game = goboard_slow.GameState.new_game(board_size)
+    game = goboard_fast.GameState.new_game(board_size)
     bots ={
         gotypes.Player.black: naive.RandomBot(),
         gotypes.Player.white: naive.RandomBot(),
