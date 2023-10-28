@@ -4,6 +4,17 @@ from dlgo.scoring import compute_game_result
 from dlgo import zobrist
 from dlgo.utils import MoveAge
 
+"""
+This is faster in a few ways:
+- Board class has a method to check whether a move will capture, and only checks for ko if the move will capture. 
+  You can't end up in a ko for a move that doesn't capture.
+  This reduces the most expensive function call does_move_violate_ko from deepcopying the board and placing a move
+- Speaking of that function, when it does get run, we don't do a full deepcopy. 
+  GoString is immutable, we don't need to copy it, we can point to the same place in memory because it won't be changed anyway
+- MoveAge and the neighbor_tables and corner_tables don't seem to be used for anything. For now, maybe for later?
+- I also don't know why the zobrist.HASH_CODE includes the empty board now. Maybe it's for something later.
+"""
+
 __all__ = [
     'Board',
     'GameState',
