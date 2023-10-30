@@ -169,7 +169,7 @@ class Board():
 
 class Move():
     def __init__(self, point = None, is_pass = False, is_resign = False):
-        #typically you would not create a Move directly,
+        # typically you would not create a Move directly,
         # but rather construct an instance by calling the 3 class methods: play, pass_turn, or resign
         assert (point is not None) ^ is_pass ^ is_resign # this is asserting that only 1 or all 3 has to be true
         self.point = point
@@ -178,7 +178,7 @@ class Move():
         self.is_resign = is_resign
 
     @classmethod # these do not operate on the instance, but rather the class method directly
-    def play(cls, point: Point) -> Point:
+    def play(cls, point: Point) -> 'Move':
         # first input of class method is cls to differentiate them from instance methods
         return Move(point = point)
     
