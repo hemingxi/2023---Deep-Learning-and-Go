@@ -22,6 +22,11 @@ DIAG_1 = (Point(1, 1), Point(2, 2), Point(3, 3))
 DIAG_2 = (Point(1, 3), Point(2, 2), Point(3, 1))
 
 
+# class Move:
+#     def __init__(self, point):
+#         self.point = point
+
+
 class Move:
     def __init__(self, point: Point = None, is_pass: bool = False, is_resign: bool = False):
         assert (point is not None) ^ is_pass ^ is_resign
@@ -48,8 +53,8 @@ class Move:
 class Board:
     def __init__(self):
         # Tic-tac-toe only has 3x3 board, so no need for these other parameters
-        # self.num_rows = num_rows
-        # self.num_cols = num_cols
+        self.num_rows = BOARD_SIZE
+        self.num_cols = BOARD_SIZE
         self._grid = {}
 
     def place(self, player: Player, point: Point) -> None:
@@ -61,11 +66,12 @@ class Board:
         self._grid[point] = player
 
     @staticmethod
-    def is_on_grid(self, point: Point) -> bool:
+    def is_on_grid(point: Point) -> bool:
         # Static methods are often used when a method is related to a class but doesn't need access to the instance-specific 
         # attributes or methods of the class.
+        # static methods do not have "self" as the first argument
         return 1 <= point.row <= BOARD_SIZE \
-            and 1<= point.col <- BOARD_SIZE
+            and 1<= point.col <= BOARD_SIZE
 
     def get(self, point: Point) -> Player:
         return self._grid.get(point)
@@ -89,6 +95,8 @@ class GameState:
 
     def apply_move(self, move: Move) -> 'GameState':
         # You don't need Player as input because you know who is playing.
+        print(move)
+        print(move.point)
         assert self.is_valid_move(move)
         if move.is_play:
             next_board = copy.deepcopy(self.board)
@@ -105,7 +113,7 @@ class GameState:
     def is_valid_move(self, move: Move) -> bool:
         if move.is_pass or move.is_resign:
             return True
-        is_point_empty = self.board.get(move.point)
+        is_point_empty = self.board.get(move.point) is None
         return Board.is_on_grid(move.point) \
             and is_point_empty
 
