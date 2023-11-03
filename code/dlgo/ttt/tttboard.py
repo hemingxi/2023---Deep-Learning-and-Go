@@ -121,17 +121,42 @@ class GameState:
                     moves.append()
 
     def _has_3_in_a_row(self, player: Player) -> bool:
-        # check rows, cols, and diagonals
-        pass
+        # Vertical
+        for col in COLS:
+            if all(self.board.get(Point(row, col)) == player for row in ROWS):
+                return True
+        # Horizontal
+        for row in ROWS:
+            if all(self.board.get(Point(row, col)) == player for col in COLS):
+                   return True
+        # Diagonal upper-left to lower-right
+        if self.board.get(Point(1, 1)) == player \
+                and self.board.get(Point(2, 2)) == player \
+                and self.board.get(Point(3, 3)) == player:
+            return True
+        # Diagonal lower-left to upper-right
+        if self.board.get(Point(3, 1)) == player \
+                and self.board.get(Point(2, 2)) == player \
+                and self.board.get(Point(1, 3)) == player:
+            return True
+        return False
 
     def is_over(self) -> bool:
-        # if either player has 3 in a row, 
-        # or all the points are filled (and no one has won)
-        pass
+        if self._has_3_in_a_row(Player.x):
+            return True
+        if self._has_3_in_a_row(Player.o):
+            return True
+        if all(self.board.get(Point(row, col))
+                for row in ROWS
+                for col in COLS):
+            return True
+        return False
 
     def winner(self) -> Player:
-        """
-        Returns the winner of the current game state if the game is over
-        """
-        pass
+        if self._has_3_in_a_row(Player.x):
+            return Player.x
+        if self._has_3_in_a_row(Player.o):
+            return Player.o
+        return None
+            
 

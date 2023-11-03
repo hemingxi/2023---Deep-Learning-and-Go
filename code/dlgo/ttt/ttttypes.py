@@ -6,7 +6,7 @@ __all__ = [
     'Point',
 ]
 
-class Player(enum):
+class Player(enum.Enum):
     x = 1
     o = 2
 
