@@ -52,7 +52,7 @@ def main():
         print("It's a draw.")
     else:
         print('Winner: ' + str(winner))
-
+    print(f"Next player: {game.next_player}")
 
 if __name__ == '__main__':
     main()
