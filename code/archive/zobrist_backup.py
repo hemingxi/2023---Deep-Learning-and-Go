@@ -1,4 +1,4 @@
-from .gotypes import Player, Point
+from ..dlgo.gotypes import Player, Point
 
 # this zobrist_backup worked with goboard and goboard_slow
 
