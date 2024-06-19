@@ -1,5 +1,6 @@
 from dlgo import agent
 from dlgo import ttt
+from dlgo import minimax
 
 
 COL_NAMES = 'ABC'
@@ -32,8 +33,8 @@ def main():
     human_player = ttt.Player.x
     # bot_player = ttt.Player.o
 
-    # bot = minimax.MinimaxAgent()
-    bot = agent.RandomBot()
+    bot = minimax.MinimaxAgent()
+    # bot = agent.RandomBot()
 
 
     while not game.is_over():
@@ -42,8 +43,12 @@ def main():
             human_move = input('-- ')
             point = point_from_coords(human_move.strip())
             move = ttt.Move(point)
+            if not game.is_valid_move(move):
+                print("This is not a valid move, please select another move.")
+                continue
         else:
             move = bot.select_move(game)
+        
         game = game.apply_move(move)
 
     print_board(game.board)

@@ -95,8 +95,7 @@ class GameState:
 
     def apply_move(self, move: Move) -> 'GameState':
         # You don't need Player as input because you know who is playing.
-        print(move)
-        print(move.point)
+        # print(move.point)
         assert self.is_valid_move(move)
         if move.is_play:
             next_board = copy.deepcopy(self.board)
@@ -126,7 +125,9 @@ class GameState:
             for c in COLS:
                 point = Point(r,c)
                 if self.board.get(point) is None:
-                    moves.append()
+                    moves.append(Move(point))
+
+        return moves
 
     def _has_3_in_a_row(self, player: Player) -> bool:
         # Vertical

@@ -1,6 +1,6 @@
 import enum
-import agent
-from ttt import *  # GameState, Move
+from dlgo import agent
+from dlgo.ttt import *  # GameState, Move
 import random
 
 
@@ -19,7 +19,7 @@ class MinimaxAgent(agent.Agent):
         for possible_move in game_state.legal_moves():
             next_state = game_state.apply_move(possible_move)
             opponent_best_outcome = best_result(next_state)
-            our_best_outcome = reverse_game_outcome(opponent_best_outcome)
+            our_best_outcome = reverse_game_result(opponent_best_outcome)
             if our_best_outcome == GameResult.win:
                 winning_moves.append(possible_move)
             elif our_best_outcome == GameResult.draw:
@@ -48,8 +48,18 @@ def best_result(game_state: GameState) -> GameResult:
         else:
             return GameResult.loss
 
+    best_result_so_far = GameResult.loss
 
-def reverse_game_outcome(game_result: GameResult) -> GameResult:
+    for candidate_move in game_state.legal_moves():
+        next_state = game_state.apply_move(candidate_move)
+        opponent_best_result = best_result(next_state)
+        our_result = reverse_game_result(opponent_best_result)
+        if our_result.value > best_result_so_far.value:
+            best_result_so_far = our_result
+        
+    return best_result_so_far
+
+def reverse_game_result(game_result: GameResult) -> GameResult:
     assert game_result is not None
     if game_result == GameResult.win:
         return GameResult.loss
